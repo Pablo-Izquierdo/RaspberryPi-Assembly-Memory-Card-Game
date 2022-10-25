@@ -1,0 +1,571 @@
+.data
+matrixO : .asciz  "#","#","#","#","#","#","#", "#","#","#","#","#","#","#", "#","#","#","#","#","#","#", "#","#","#","#","#","#","#", "#","#","#","#","#","#","#", "#","#","#","#","#","#","#"
+matrixC : .asciz  "A","B","C","D","E","F","G", "H","I","J","K","L","M","N", "O","P","Q","R","S","T","U", "A","B","C","D","E","F","G", "H","I","J","K","L","M","N", "O","P","Q","R","S","T","U"
+
+ESPACIO : .asciz "\n"
+        .align 2
+vectorCoor: .space 84
+
+
+.equ LE, 2
+.equ NC, 7
+.equ NF, 6
+.equ LM, 84
+
+Texto1: .asciz "\nBienvenido a este increible juego\n"
+Texto2: .asciz "Introduzca coordenadas de la primera carta:\n"
+Texto3: .asciz "Coordenada X: "
+Texto4: .asciz "\nCoordenada Y: "
+Texto5: .asciz "\nIntroduzca coordenadas de la segunda carta:\n"
+Texto6: .asciz "Coordenada Z: "
+Texto7: .asciz "\nCoordenada K: "
+Texto8: .asciz "\nError vuelva a introducir coordenadas\n"
+Texto9: .asciz "\nHas fallado, vuelve a intentarlo"
+Texto10: .asciz "\nHas acertado, sigue asi"
+
+TextoFin: .asciz "\nFelicidades has ganado"
+
+.text
+.globl _start
+_start:
+
+LDR R0, =vectorCoor
+MOV R1,#84
+MOV R2,#0x50
+
+BL LimpiaMemoria
+
+LDR R0,=matrixC
+BL BARAJEA
+
+MOV R8,#0
+
+LDR R0,=Texto1
+SWI 0x02
+
+MOV R11,#0
+
+WhileJuego:
+CMP R11,#21      @bucle principal
+BEQ FinJuego
+
+LDR R0, =matrixO
+MOV R1,#NF
+MOV R2,#NC
+MOV R3,#LE
+
+BL Muestra_Matriz
+
+Coordenadas:
+
+LDR R0,=Texto2 @FRASE
+SWI 0x02
+
+LDR R0,=Texto3 @X
+SWI 0x02
+
+SWI 0x04
+SUB R4,R0,#0x30
+
+LDR R0,=Texto4 @Y
+SWI 0x02
+
+SWI 0x04
+SUB R5,R0,#0x30
+
+LDR R0,=ESPACIO
+SWI 0x02
+
+@Compruebo rango de coordenadas
+MOV R0,#NF
+SUB R0,R0,#1 @Maximo valor
+CMP R4,R0
+LDRGT R0,=Texto8
+SWIGT 0x02
+BGT Coordenadas
+
+MOV R0,#NC
+SUB R0,R0,#1 @Maximo valor
+CMP R5,R0
+LDRGT R0,=Texto8
+SWIGT 0x02
+BGT Coordenadas
+
+
+MOV R0,R4
+MOV R1,R5
+MOV R2,#0x51
+MOV R3,#0x51
+BL Genera_Palabra
+
+LDR R1,=vectorCoor
+MOV R2,R8
+BL Comprueba_Error
+
+CMP R0,#1
+BNE SIGUE
+    LDR R0,=Texto8
+    SWI 0x02
+    B Coordenadas
+
+SIGUE:
+MOV R0,R4
+MOV R1,R5
+MOV R2,#0
+MOV R3,#0
+BL Genera_Palabra
+
+LDR R1,=matrixO
+MOV R2,#LE
+LDR R3,=matrixC
+MOV R12,#NC
+BL Voltear
+MOV R9,R0
+
+
+LDR R0,=matrixO
+MOV R1,#NF
+MOV R2,#NC
+MOV R3,#LE
+
+BL Muestra_Matriz
+
+Coordenadas2:
+
+LDR R0,=Texto5 @FRASE
+SWI 0x02
+
+LDR R0,=Texto6 @Z
+SWI 0x02
+
+SWI 0x04
+SUB R6,R0,#0x30
+
+LDR R0,=Texto7 @K
+SWI 0x02
+
+SWI 0x04
+SUB R7,R0,#0x30
+
+@Compruebo rango de coordenadas
+MOV R0,#NF
+SUB R0,R0,#1 @Maximo valor
+CMP R6,R0
+LDRGT R0,=Texto8
+SWIGT 0x02
+BGT Coordenadas2
+
+MOV R0,#NC
+SUB R0,R0,#1 @Maximo valor
+CMP R7,R0
+LDRGT R0,=Texto8
+SWIGT 0x02
+BGT Coordenadas2
+
+MOV R0,R4
+MOV R1,R5
+MOV R2,R6
+MOV R3,R7
+BL Genera_Palabra
+
+LDR R1,=vectorCoor
+MOV R2,R8
+BL Comprueba_Error
+
+CMP R0,#1
+BNE SIGUE2
+    LDR R0,=Texto8
+    SWI 0x02
+    B Coordenadas2
+
+SIGUE2:
+MOV R0,R6
+MOV R1,R7
+MOV R2,#0
+MOV R3,#0
+BL Genera_Palabra
+
+LDR R1,=matrixO
+MOV R2,#LE
+LDR R3,=matrixC
+MOV R12,#NC
+BL Voltear
+MOV R10,R0
+
+
+MOV R0,R4
+MOV R1,R5
+MOV R2,R6
+MOV R3,R7
+BL Genera_Palabra
+
+LDR R1,=vectorCoor
+MOV R2,R8
+BL Comprueba_Error
+
+CMP R0,#1
+BNE CONTINUA_COOR
+    LDR R0,=Texto8
+    SWI 0x02
+    B Coordenadas
+
+CONTINUA_COOR:
+
+MOV R0,R9
+MOV R1,R10
+BL CompruebaLetra
+
+CMP R0,#1
+BNE CONTINUA_FALLO
+    MOV R0,R4
+    MOV R1,R5
+    MOV R2,R6
+    MOV R3,R7
+    BL Genera_Palabra
+
+    LDR R1,=vectorCoor
+    ADD R1,R1,R8
+
+    BL Guarda_Pareja
+
+    ADD R8,R8,#4
+    ADD R11,R11,#1
+    B CONTINUA_CORRECTO
+
+CONTINUA_FALLO:
+
+LDR R0,=ESPACIO
+SWI 0x02
+
+LDR R0,=matrixO
+MOV R1,#NF
+MOV R2,#NC
+MOV R3,#LE
+
+BL Muestra_Matriz
+
+@doy vuelta a las cartas fallidas
+MOV R0,R4
+MOV R1,R5
+MOV R2,#0
+MOV R3,#0
+BL Genera_Palabra
+
+LDR R1,=matrixO
+MOV R2,#LE
+LDR R3,=matrixC
+MOV R12,#NC
+
+BL Voltear  @fallo las vuelvo a su sitio
+
+MOV R0,R6
+MOV R1,R7
+MOV R2,#0
+MOV R3,#0
+BL Genera_Palabra
+
+LDR R1,=matrixO
+MOV R2,#LE
+LDR R3,=matrixC
+MOV R12,#NC
+
+BL Voltear  @fallo las vuelvo a su sitio
+
+LDR R0,=Texto9
+SWI 0x02
+B REPITE
+
+CONTINUA_CORRECTO:
+
+LDR R0,=Texto10
+SWI 0x02
+
+REPITE:
+LDR R0,=ESPACIO
+SWI 0x02
+
+B WhileJuego
+
+FinJuego:
+
+LDR R0,=TextoFin
+SWI 0x02
+
+SWI 0x11
+
+
+
+
+
+
+Muestra_Matriz:
+STMDB SP!, {R4-R8, LR}
+
+MOV R6,R1 @NF
+MOV R7,R2 @NC
+MOV R8,R3 @LE
+
+ADD R2,R0,#0
+MOV R4,#0
+
+
+WHILEMM1:
+	CMP R4,R6
+	BGE FINMM
+
+		MOV R5,#0
+		WHILEMM2:
+			CMP R5,R7
+			BGE FWHILEMM2
+				MOV R0,R4  @X
+				MOV R1,R5  @Y
+				             @R2 DIR MATRIZ O
+				MOV R3, R7   @NC
+				MOV R12, R8     @LE
+				BL Imprime_Letra
+				ADD R5,R5,#1
+				B WHILEMM2
+
+			FWHILEMM2:
+			LDR R0,=ESPACIO
+			SWI 0x02
+			ADD R4,R4,#1
+			B WHILEMM1
+	FINMM:
+		LDMIA SP!, {R4-R8, PC}
+
+Imprime_Letra:
+
+	STMDB SP!, {R4-R5}
+
+	MOV R5,R3
+	MUL R4,R0,R5
+
+	ADD R4,R4,R1
+
+	MOV R5,R12
+	MUL R1,R4,R5
+
+	ADD R0,R2,R1
+	SWI 0x02
+
+	LDMIA SP!, {R4-R5}
+	MOV PC,LR
+
+CompruebaLetra:
+
+CMP R0,R1
+BNE ELSECL
+    MOV R0,#1 @SON IGUALES
+    B FINCL
+
+ELSECL:
+MOV R0,#0     @SON DISTINTAS
+
+FINCL:
+MOV PC,LR
+
+Voltear:
+
+STMDB SP!, {R4-R8, LR}
+
+LSR R8,R0,#8
+AND R0,R0,#0xFF
+
+
+MUL R4,R0,R12
+ADD R4,R4,R8
+
+
+MUL R4,R2,R4
+
+LDRB R6, [R1,R4]
+LDRB R7, [R3,R4]
+
+STRB R7, [R1,R4]
+STRB R6, [R3,R4]
+
+MOV R0,R7
+LDMIA SP!, {R4-R8, PC}
+
+Genera_Palabra:
+
+LSL R1,#8
+ORR R0,R1
+LSL R2,#16
+ORR R0,R2
+LSL R3,#24
+ORR R0,R3
+
+MOV PC,LR
+
+
+Guarda_Pareja:
+
+STR R0,[R1]
+
+MOV PC,LR
+
+Comprueba_Error:
+
+STMDB SP!, {R4-R10, LR}
+
+MOV R4,#0xFF00
+ORR R4,#0xFF
+
+AND R4,R0,R4
+LSR R5,R0,#16
+MOV R6,R1
+
+CMP R4,R5
+BEQ ENCONTRADO
+
+
+MOV R0,R2
+MOV R1,#2
+
+BL Cociente
+
+ADD R0,R0,#1
+MOV R7,#0
+
+ForCE:
+CMP R7,R0
+BGE FForCE
+    MOV R10,#2
+    MUL R8,R7,R10
+    LDRH R9, [R6,R8]
+    CMP R9,R4
+    BNE ElseCE
+        B ENCONTRADO
+
+    ElseCE:
+    CMP R9,R5
+    BEQ ENCONTRADO
+        ADD R7,R7,#1
+        B ForCE
+
+
+
+ENCONTRADO:
+MOV R0,#1
+B FinCE
+
+
+FForCE:   @No Encontrado
+MOV R0,#0
+FinCE:
+LDMIA SP!, {R4-R10,PC}
+
+
+Cociente:
+STMDB SP!, {R4,LR}
+MOV R4,#0
+
+WhileCO:
+CMP R0,R1
+BLE FinwhileCO
+    SUB R0,R0,R1
+    ADD R4,R4,#1
+    B WhileCO
+FinwhileCO:
+MOV R0,R4
+LDMIA SP!, {R4,PC}
+
+
+LimpiaMemoria:
+
+MOV R3,#0
+
+FORLM:
+CMP R3,R1
+BGE FINLM
+    STRB R2,[R0,R3]
+    ADD R3,R3,#1
+    B FORLM
+
+FINLM:
+MOV PC,LR
+
+
+
+BARAJEA:
+
+STMDB SP!, {R4-R9,LR}
+
+ADD R9,R0,#0  @DIRECCION
+
+MOV R8,#0
+
+FORBAR:
+CMP R8,#42
+BEQ FINFORBAR
+
+MOV R0,#6
+BL random_integer
+MOV R4,R0     @X
+MOV R0,#6
+BL random_integer
+MOV R5,R0     @Z
+MOV R0,#7
+BL random_integer
+MOV R6,R0     @Y
+MOV R0,#7
+BL random_integer
+MOV R7,R0     @K
+
+MOV R0,R4 @X
+MOV R1,R6 @Y
+MOV R2,R5 @Z
+MOV R3,R7 @K
+ADD R12,R9,#0
+BL CAMBIO
+
+ADD R8,R8,#1
+
+B FORBAR
+
+
+FINFORBAR:
+
+LDMIA SP!, {R4-R9, PC}
+
+CAMBIO:
+
+STMDB SP!, {R4-R7,LR}
+
+MOV R5,#NC
+MUL R4,R0,R5
+ADD R4,R4,R1
+
+MOV R5,#LE
+MUL R4,R5,R4 @DESPLAZAMIENTO 1
+
+MOV R5,#NC
+MUL R6,R2,R5
+ADD R6,R6,R3
+
+MOV R5,#LE
+MUL R5,R6,R5 @DESPLAZAMIENTO 2
+
+LDRB R6, [R12,R4]
+LDRB R7, [R12,R5]
+
+STRB R7, [R12,R4]
+STRB R6, [R12,R5]
+
+LDMIA SP!, {R4-R7,PC}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
